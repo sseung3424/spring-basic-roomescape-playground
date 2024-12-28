@@ -30,8 +30,7 @@ public class MemberController {
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody MemberRequest memberRequest, HttpServletResponse response) {
         if(memberService.findMember(memberRequest) != null) {
-            String name = memberService.findMember(memberRequest);
-            String token = memberService.generateToken(name);
+            String token = memberService.createToken(memberRequest.getEmail(), memberRequest.getPassword());
             Cookie cookie = new Cookie("token", token);
             cookie.setPath("/");
             cookie.setMaxAge(3600);
@@ -48,7 +47,7 @@ public class MemberController {
             for (Cookie cookie : cookies) {
                 if(cookie.getName().equals("token")) {
                     String token = cookie.getValue();
-                    String name = memberService.findMemberByToken(token);
+                    String name = memberService.findMemberByToken(token).getName();
 
                     return ResponseEntity.ok(Map.of("name", name));
                 }

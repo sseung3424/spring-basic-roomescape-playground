@@ -21,24 +21,25 @@ public class MemberService {
         return new MemberResponse(member.getId(), member.getName(), member.getEmail());
     }
 
-    public String findMember(MemberRequest memberRequest) {
+    public MemberResponse findMember(MemberRequest memberRequest) {
         Member member = memberDao.findByEmailAndPassword(memberRequest.getEmail(), memberRequest.getPassword());
-        return member.getName();
+        return new MemberResponse(member.getId(), member.getName(), member.getEmail());
     }
 
-    public String generateToken(String userName) {
+    public String createToken(String email, String password) {
         String secret = "roomescape-application-secret-key-for-login!";
         Key key = new SecretKeySpec(secret.getBytes(), SignatureAlgorithm.HS256.getJcaName());
+        Member member = memberDao.findByEmailAndPassword(email, password);
         return Jwts.builder()
             .setSubject("user-identifier")
-            .claim("name", userName)
+            .claim("name", member.getName())
             .setIssuedAt(new Date())
             .setExpiration(new Date(System.currentTimeMillis() + 3600000))
             .signWith(key, SignatureAlgorithm.HS256)
             .compact();
     }
 
-    public String findMemberByToken(String token) {
+    public MemberResponse findMemberByToken(String token) {
         String secret = "roomescape-application-secret-key-for-login!";
         Key key = new SecretKeySpec(secret.getBytes(), SignatureAlgorithm.HS256.getJcaName());
 
@@ -48,7 +49,8 @@ public class MemberService {
             .parseClaimsJws(token)
             .getBody();
 
-        return claims.get("name", String.class);
-
+        String name = claims.get("name", String.class);
+        Member member = memberDao.findByName(name);
+        return new MemberResponse(member.getId(), member.getName(), member.getEmail());
     }
 }
