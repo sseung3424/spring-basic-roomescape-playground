@@ -44,16 +44,11 @@ public class LoginMemberArgumentResolver implements HandlerMethodArgumentResolve
       throw new IllegalArgumentException("유효한 토큰을 찾을 수 없습니다.");
     }
 
-    MemberResponse memberResponse = memberService.findMemberByToken(token);
-    if (memberResponse == null) {
-      throw new IllegalArgumentException("Invalid token or member not found");
+    Member member = memberService.findMemberByToken(token);
+    if (member == null) {
+      throw new IllegalArgumentException("유효하지 않은 토큰 또는 사용자입니다.");
     }
 
-    return new Member(
-        memberResponse.getId(),
-        memberResponse.getName(),
-        memberResponse.getEmail(),
-        "USER"
-    );
+    return member;
   }
 }

@@ -33,13 +33,14 @@ public class MemberService {
         return Jwts.builder()
             .setSubject("user-identifier")
             .claim("name", member.getName())
+            .claim("role", member.getRole())
             .setIssuedAt(new Date())
             .setExpiration(new Date(System.currentTimeMillis() + 3600000))
             .signWith(key, SignatureAlgorithm.HS256)
             .compact();
     }
 
-    public MemberResponse findMemberByToken(String token) {
+    public Member findMemberByToken(String token) {
         String secret = "roomescape-application-secret-key-for-login!";
         Key key = new SecretKeySpec(secret.getBytes(), SignatureAlgorithm.HS256.getJcaName());
 
@@ -50,7 +51,6 @@ public class MemberService {
             .getBody();
 
         String name = claims.get("name", String.class);
-        Member member = memberDao.findByName(name);
-        return new MemberResponse(member.getId(), member.getName(), member.getEmail());
+        return memberDao.findByName(name);
     }
 }
