@@ -3,6 +3,8 @@ package roomescape.member;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.Map;
+import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,6 +26,37 @@ public class MemberController {
         MemberResponse member = memberService.createMember(memberRequest);
         return ResponseEntity.created(URI.create("/members/" + member.getId())).body(member);
     }
+
+    @PostMapping("/login")
+    public ResponseEntity login(@RequestBody MemberRequest memberRequest, HttpServletResponse response) {
+        if(memberService.findMember(memberRequest) != null) {
+            String name = memberService.findMember(memberRequest);
+            String token = memberService.generateToken(name);
+            Cookie cookie = new Cookie("token", token);
+            cookie.setPath("/");
+            cookie.setMaxAge(3600);
+            response.addCookie(cookie);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/login/check")
+    public ResponseEntity checkLogin(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if(cookies != null) {
+            for (Cookie cookie : cookies) {
+                if(cookie.getName().equals("token")) {
+                    String token = cookie.getValue();
+                    String name = memberService.findMemberByToken(token);
+
+                    return ResponseEntity.ok(Map.of("name", name));
+                }
+            }
+        }
+        return ResponseEntity.status(401).build();
+    }
+
 
     @PostMapping("/logout")
     public ResponseEntity logout(HttpServletResponse response) {
